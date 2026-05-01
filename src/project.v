@@ -1,11 +1,4 @@
-/*
- * Copyright (c) 2024 Your Name
- * SPDX-License-Identifier: Apache-2.0
- */
-
-`default_nettype none
-
-module tt_um_example (
+module tt_um_pmendozap_tiny_spi_segment (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -16,12 +9,33 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
+    assign uio_oe[7:1] = 7'b1111000;
+    assign uo_out[7] = 0;
+
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  assign uio_out[3:1] = 0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, uio_in[0], uio_in[7:4], 1'b0};
+
+    sp_seg U(
+    .i_Clk(clk),
+    .i_Rst_L(rst_n),
+
+    // SPI Interface //WIll go to GIOs 
+    .i_SPI_Clk(uio_in[3]),
+    .i_SPI_CS_n(uio_in[2]),        // active low
+    .i_SPI_MOSI(uio_in[1]),
+    .o_SPI_MISO(uio_out[0]),
+    .o_SPI_MISO_EN(uio_oe[0]),
+    
+    
+    //drive two 4segments?
+    .a_to_g(uo_out[6:0]), //to GIOS 4
+    .an(uio_out[7:4]), // to outs
+
+    //segment
+    .data_in(ui_in) //inputs 
+    );
 
 endmodule
